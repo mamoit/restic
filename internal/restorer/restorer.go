@@ -283,11 +283,13 @@ func (res *Restorer) RestoreTo(ctx context.Context, dst string) error {
 				idx.Add(node.Inode, node.DeviceID, location)
 			}
 
-			if res.progress != nil {
-				res.progress.AddFile(node.Size)
+			fileInfo, err := os.Stat(target)
+			if err != nil || fileInfo.Size() != int64(node.Size) || !fileInfo.ModTime().Equal(node.ModTime) {
+				if res.progress != nil {
+					res.progress.AddFile(node.Size)
+				}
+				filerestorer.addFile(location, node.Content, int64(node.Size))
 			}
-
-			filerestorer.addFile(location, node.Content, int64(node.Size))
 
 			return nil
 		},
